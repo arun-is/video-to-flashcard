@@ -1,0 +1,26 @@
+{
+  "name": "video-to-anki",
+  "version": "0.0.1",
+  "description": "Converts videos with subtitle(s) into anki flashcards",
+  "main": "run.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/arun-is/video-to-anki.git"
+  },
+  "author": "Arun Venkatesan",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/arun-is/video-to-anki/issues"
+  },
+  "homepage": "https://github.com/arun-is/video-to-anki#readme",
+  "devDependencies": {
+    "gulp": "^3.9.1",
+    "yargs": "^7.0.2"
+  },
+  "dependencies": {
+    "subtitle": "^0.1.5"
+  }
+}
