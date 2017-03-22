@@ -1,35 +1,60 @@
 const argv = require('yargs').argv;
 const fs = require('fs');
-var Subtitle = require('subtitle');
+const Subtitle = require('subtitle');
+const ffmpeg = require('fluent-ffmpeg');
 
-if(argv.s) {
+readSRT = function(callback) {
+  if(argv.s) {
 
-  fs.readFile(argv.s, "utf-8", function (err,data) {
-  if (err) {
-    return console.err(err);
+    // read srt file
+    fs.readFile(argv.s, "utf-8", function (err,data) {
+
+      if (err) {
+        return console.err(err);
+      }
+
+      callback(data);
+
+    });
+
   }
+}
 
+callback = function(data) {
+  // initialize caption object
   var captions = new Subtitle();
 
+  // parse .srt file
   captions.parse(data);
 
-  try {
-    fs.mkdirSync('bin');
-  }
+  // create dir if needed
+  // try {
+  //   fs.mkdirSync('bin');
+  // }
+  // catch (err) {
+  //   console.error(err);
+  // }
 
-  catch (err) {
-    console.error(err);
-  }
-  
-  fs.writeFile("bin/test.json", JSON.stringify(captions.getSubtitles({
-    timeFormat: 'ms' // Set time format to milliseconds
-  })), function(err) {
-      if(err) {
-          return console.error(err);
-      }
-      console.log("The file was saved!");
-  });
+  subtitles = captions.getSubtitles()
 
-});
-
+  // write srt file
+  // fs.writeFile("bin/test.json", JSON.stringify(subtitles), function(err) {
+  //     if(err) {
+  //         return console.error(err);
+  //     }
+  //     console.log("The file was saved!");
+  // });
 }
+
+
+readSRT(callback);
+
+ffmpeg(argv.v)
+  .screenshots({
+    timestamps: ['00:10.123', '10:20.123', '20:30.123'],
+    filename: 'thumbnail-at-%s-seconds.png',
+    folder: 'bin'
+  })
+  .on('error', function(err) {
+    console.log(err);
+  });

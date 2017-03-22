@@ -16,11 +16,10 @@
     "url": "https://github.com/arun-is/video-to-anki/issues"
   },
   "homepage": "https://github.com/arun-is/video-to-anki#readme",
-  "devDependencies": {
-    "gulp": "^3.9.1",
-    "yargs": "^7.0.2"
-  },
+  "devDependencies": {},
   "dependencies": {
-    "subtitle": "^0.1.5"
+    "fluent-ffmpeg": "^2.1.0",
+    "subtitle": "^0.1.5",
+    "yargs": "^7.0.2"
   }
 }
