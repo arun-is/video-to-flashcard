@@ -3,7 +3,9 @@ const fs = require('fs');
 const Subtitle = require('subtitle');
 const ffmpeg = require('fluent-ffmpeg');
 
-readSRT = function(callback) {
+readSRT(callback);
+
+function readSRT(callback) {
   if(argv.s) {
 
     // read srt file
@@ -20,7 +22,7 @@ readSRT = function(callback) {
   }
 }
 
-callback = function(data) {
+function callback (data) {
   // initialize caption object
   var captions = new Subtitle();
 
@@ -28,14 +30,14 @@ callback = function(data) {
   captions.parse(data);
 
   // create dir if needed
-  // try {
-  //   fs.mkdirSync('bin');
-  // }
-  // catch (err) {
-  //   console.error(err);
-  // }
+  try {
+    fs.mkdirSync('bin');
+  }
+  catch (err) {
+    console.error(err);
+  }
 
-  subtitles = captions.getSubtitles()
+  console.log(captions.getSubtitles());
 
   // write srt file
   // fs.writeFile("bin/test.json", JSON.stringify(subtitles), function(err) {
@@ -44,17 +46,15 @@ callback = function(data) {
   //     }
   //     console.log("The file was saved!");
   // });
+
+  ffmpeg(argv.v)
+    .screenshots({
+      timestamps: ['00:10.123', '10:20.123', '20:30.123'],
+      filename: 'thumbnail-at-%s-seconds.png',
+      folder: 'bin'
+    })
+    .on('error', function(err) {
+      console.log(err);
+    });
+
 }
-
-
-readSRT(callback);
-
-ffmpeg(argv.v)
-  .screenshots({
-    timestamps: ['00:10.123', '10:20.123', '20:30.123'],
-    filename: 'thumbnail-at-%s-seconds.png',
-    folder: 'bin'
-  })
-  .on('error', function(err) {
-    console.log(err);
-  });
