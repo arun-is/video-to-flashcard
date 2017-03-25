@@ -1,33 +1,61 @@
 const argv = require('yargs').argv;
 const ffmpeg = require('fluent-ffmpeg');
 const fs = require('fs');
-const Subtitle = require('subtitle');
+const subtitle = require('subtitle');
 
-var p1 = readSubtitle(argv.s),
-    p2 = readSubtitle(argv.t);
+var subtitles, promises = [];
+promises.push(readSubtitle(argv.s))
+promises.push(readSubtitle(argv.t));
 
 // wait for both files to be read before continuing
-Promise.all([p1,p2]).then(values => console.log(values));
+Promise.all(promises).then(values => {
+
+  // parse both subtitle files
+  subtitles = values.map(value => parseSubtitle(value));
+  console.log(subtitles);
+});
 
 // return a promise of subtitle data given a path
 function readSubtitle(path) {
   return new Promise((resolve, reject) => {
     if(path) {
-      fs.readFile(path, "utf-8", function (err,data) {
+      fs.readFile(path, 'utf-8', function (err,data) {
         if (err) {
-          return console.err(err);
+          console.err(err);
+          reject();
         }
         resolve(data);
       });
     } else {
+      console.err('no path given for subtitle');
       reject();
     }
   });
 }
 
+// parse subtitle and return it as an array of objects
+function parseSubtitle(data) {
+  var captions = new subtitle();
+  captions.parse(data);
+  return captions.getSubtitles();
+}
 
-
-
+// given an array of timestamps and a path, print screenshots
+function captureScreenshots(path, timeStamps) {
+  if(path) {
+    ffmpeg(argv.v)
+      .screenshots({
+        timestamps: timeStamps,
+        filename: '%i.png',
+        folder: 'bin'
+      })
+      .on('error', function(err) {
+        console.log(err);
+      });
+  } else {
+    console.error('no path given for video');
+  }
+}
 
 // readSRT(callback);
 //
@@ -73,14 +101,6 @@ function readSubtitle(path) {
 //   //     console.log("The file was saved!");
 //   // });
 //
-//   ffmpeg(argv.v)
-//     .screenshots({
-//       timestamps: ['00:10.123', '10:20.123', '20:30.123'],
-//       filename: 'thumbnail-at-%s-seconds.png',
-//       folder: 'bin'
-//     })
-//     .on('error', function(err) {
-//       console.log(err);
-//     });
+
 //
 // }
