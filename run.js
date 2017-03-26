@@ -20,9 +20,11 @@ Promise.all(promises).then(values => {
     lang2: subtitles[1][index].text,
     start: value.start.replace(',', '.'),
     end: value.end.replace(',', '.'),
+    index: value.index,
   }));
 
   captureScreenshots(tuples.slice(0,10).map(value => value.start));
+  tuples.slice(0,10).map(tuple => captureVideo(tuple));
 });
 
 // return a promise of subtitle data given a path
@@ -60,11 +62,22 @@ function captureScreenshots(timestamps) {
         folder: 'bin'
       })
       .on('error', function(err) {
-        console.log(err);
+        console.error(err);
       });
   } else {
     console.error('no path given for video');
   }
+}
+
+function captureVideo(tuple) {
+  ffmpeg(argv.v)
+    .setStartTime(tuple.start)
+    .setDuration(convertToTimestamp(
+      convertToMilliseconds(tuple.end) - convertToMilliseconds(tuple.start)
+    ))
+    .output(`bin/${tuple.index}.mp4`)
+    .on('error', err => console.error(err))
+    .run();
 }
 
 function createBin() {
@@ -101,11 +114,9 @@ function convertToTimestamp(time) {
   return `${pad(hours, 2)}:${pad(minutes, 2)}:${pad(seconds, 2)}.${pad(time, 3)}`;
 }
 
-
 // convert timestamp to milliseconds
 function convertToMilliseconds(timestamp) {
   var numbers = timestamp.match(/(\d{2}):(\d{2}):(\d{2})\.(\d{3})/);
   var [stamp, hours, minutes, seconds, milliseconds] = numbers.map(number => parseInt(number));
-  console.log(hours,minutes,seconds,milliseconds);
   return ((((hours * 60) + minutes) * 60) + seconds) * 1000 + milliseconds;
 }
