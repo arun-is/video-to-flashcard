@@ -51,11 +51,11 @@ function parseSubtitle(data) {
 }
 
 // given an array of timestamps and a path, print screenshots
-function captureScreenshots(timeStamps) {
+function captureScreenshots(timestamps) {
   if(argv.v) {
     ffmpeg(argv.v)
       .screenshots({
-        timestamps: timeStamps,
+        timestamps: timestamps,
         filename: '%i.png',
         folder: 'bin'
       })
@@ -77,4 +77,35 @@ function createBin() {
       console.error(err);
     }
   }
+}
+
+
+// add leading zeros to numbers and return as string
+function pad(num, size) {
+    var s = num+"";
+    while (s.length < size) s = "0" + s;
+    return s;
+}
+
+// convert milliseconds to timestamp
+function convertToTimestamp(time) {
+  var hours = Math.floor(time / (60*60*1000));
+  time -= hours * 60*60*1000;
+
+  var minutes = Math.floor(time / (60*1000));
+  time -= minutes * 60*1000;
+
+  var seconds = Math.floor(time / 1000);
+  time -= seconds * 1000;
+
+  return `${pad(hours, 2)}:${pad(minutes, 2)}:${pad(seconds, 2)}.${pad(time, 3)}`;
+}
+
+
+// convert timestamp to milliseconds
+function convertToMilliseconds(timestamp) {
+  var numbers = timestamp.match(/(\d{2}):(\d{2}):(\d{2})\.(\d{3})/);
+  var [stamp, hours, minutes, seconds, milliseconds] = numbers.map(number => parseInt(number));
+  console.log(hours,minutes,seconds,milliseconds);
+  return ((((hours * 60) + minutes) * 60) + seconds) * 1000 + milliseconds;
 }
