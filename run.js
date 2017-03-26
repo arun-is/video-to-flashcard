@@ -12,7 +12,17 @@ Promise.all(promises).then(values => {
 
   // parse both subtitle files
   subtitles = values.map(value => parseSubtitle(value));
-  console.log(subtitles);
+
+  createBin();
+
+  var tuples = subtitles[0].map((value, index) => ({
+    lang1: value.text,
+    lang2: subtitles[1][index].text,
+    start: value.start.replace(',', '.'),
+    end: value.end.replace(',', '.'),
+  }));
+
+  captureScreenshots(tuples.slice(0,10).map(value => value.start));
 });
 
 // return a promise of subtitle data given a path
@@ -41,8 +51,8 @@ function parseSubtitle(data) {
 }
 
 // given an array of timestamps and a path, print screenshots
-function captureScreenshots(path, timeStamps) {
-  if(path) {
+function captureScreenshots(timeStamps) {
+  if(argv.v) {
     ffmpeg(argv.v)
       .screenshots({
         timestamps: timeStamps,
@@ -57,50 +67,14 @@ function captureScreenshots(path, timeStamps) {
   }
 }
 
-// readSRT(callback);
-//
-// function readSRT(callback) {
-//   if(argv.s) {
-//
-//     // read srt file
-//     fs.readFile(argv.s, "utf-8", function (err,data) {
-//
-//       if (err) {
-//         return console.err(err);
-//       }
-//
-//       callback(data);
-//
-//     });
-//
-//   }
-// }
-//
-// function callback (data) {
-//   // initialize caption object
-//   var captions = new subtitle();
-//
-//   // parse .srt file
-//   captions.parse(data);
-//
-//   // create dir if needed
-//   try {
-//     fs.mkdirSync('bin');
-//   }
-//   catch (err) {
-//     console.error(err);
-//   }
-//
-//   console.log(captions.getSubtitles());
-//
-//   // write srt file
-//   // fs.writeFile("bin/test.json", JSON.stringify(subtitles), function(err) {
-//   //     if(err) {
-//   //         return console.error(err);
-//   //     }
-//   //     console.log("The file was saved!");
-//   // });
-//
-
-//
-// }
+function createBin() {
+  // check if directory exists, then create it
+  if(!fs.existsSync('bin')) {
+    try {
+      fs.mkdirSync('bin');
+    }
+    catch (err) {
+      console.error(err);
+    }
+  }
+}
