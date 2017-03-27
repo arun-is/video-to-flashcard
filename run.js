@@ -3,6 +3,8 @@ const ffmpeg = require('fluent-ffmpeg');
 const fs = require('fs');
 const subtitle = require('subtitle');
 
+const directory = 'bin';
+
 var subtitles, promises = [];
 promises.push(readSubtitle(argv.s))
 promises.push(readSubtitle(argv.t));
@@ -13,8 +15,10 @@ Promise.all(promises).then(values => {
   // parse both subtitle files
   subtitles = values.map(value => parseSubtitle(value));
 
-  createBin();
+  // create directory if needed
+  createDir();
 
+  // create reduced tuples with subtitle information
   var tuples = subtitles[0].map((value, index) => ({
     lang1: value.text,
     lang2: subtitles[1][index].text,
@@ -23,8 +27,26 @@ Promise.all(promises).then(values => {
     index: value.index,
   }));
 
-  captureScreenshots(tuples.slice(0,10).map(value => value.start));
-  tuples.slice(0,10).map(tuple => captureVideo(tuple));
+  tuples = tuples.slice(0,10);
+
+  // capture screenshots
+  captureScreenshots(tuples.map(value => value.start));
+
+  // create video clips
+  tuples.map(tuple => captureVideo(tuple));
+
+  // create csv string
+  var csv = '1 Text,1 Image,2 Text,2 Video\n';
+  csv += tuples.reduce((acc, val) => acc += `"${val.lang1}",${val.index}.jpg,"${val.lang2}",${val.index}.mp4\n`, '');
+  csv = csv.trim();
+
+  // write csv file
+  fs.writeFile(`${directory}/Data.csv`, csv, function(err) {
+      if(err) {
+          return console.error(err);
+      }
+      console.log("The file was saved!");
+  });
 });
 
 // return a promise of subtitle data given a path
@@ -58,8 +80,8 @@ function captureScreenshots(timestamps) {
     ffmpeg(argv.v)
       .screenshots({
         timestamps: timestamps,
-        filename: '%i.png',
-        folder: 'bin'
+        filename: '%i.jpg',
+        folder: directory
       })
       .on('error', function(err) {
         console.error(err);
@@ -75,16 +97,17 @@ function captureVideo(tuple) {
     .setDuration(convertToTimestamp(
       convertToMilliseconds(tuple.end) - convertToMilliseconds(tuple.start)
     ))
-    .output(`bin/${tuple.index}.mp4`)
+    .size('50%')
+    .output(`${directory}/${tuple.index}.mp4`)
     .on('error', err => console.error(err))
     .run();
 }
 
-function createBin() {
+function createDir() {
   // check if directory exists, then create it
-  if(!fs.existsSync('bin')) {
+  if(!fs.existsSync(directory)) {
     try {
-      fs.mkdirSync('bin');
+      fs.mkdirSync(directory);
     }
     catch (err) {
       console.error(err);
@@ -95,8 +118,8 @@ function createBin() {
 
 // add leading zeros to numbers and return as string
 function pad(num, size) {
-    var s = num+"";
-    while (s.length < size) s = "0" + s;
+    var s = num+'';
+    while (s.length < size) s = '0' + s;
     return s;
 }
 
