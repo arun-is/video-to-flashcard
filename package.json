@@ -19,6 +19,7 @@
   "devDependencies": {},
   "dependencies": {
     "fluent-ffmpeg": "^2.1.0",
+    "promise-map-limit": "^1.0.0",
     "subtitle": "^0.1.5",
     "yargs": "^7.0.2"
   }

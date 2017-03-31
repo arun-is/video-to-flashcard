@@ -1,9 +1,12 @@
 const argv = require('yargs').argv;
 const ffmpeg = require('fluent-ffmpeg');
 const fs = require('fs');
+const mapLimit = require('promise-map-limit');
 const subtitle = require('subtitle');
 
 const directory = 'bin';
+
+const videoBatchSize = 2;
 
 // verify that all params are provided
 if(!argv.v) {
@@ -91,7 +94,15 @@ function captureScreenshots(tuples) {
 }
 
 function captureVideos(tuples) {
-  tuples.map(tuple => {
+  return new Promise((resolve, reject) => {
+    mapLimit(tuples, videoBatchSize, captureSingleVideo).then(results => {
+      resolve(tuples);
+    });
+  });
+}
+
+function captureSingleVideo(tuple) {
+  return new Promise((resolve, reject) => {
     ffmpeg(argv.v)
       .setStartTime(tuple.start)
       .setDuration(convertToTimestamp(
@@ -99,7 +110,13 @@ function captureVideos(tuples) {
       ))
       .size('50%')
       .output(`${directory}/${tuple.index}.mp4`)
-      .on('error', err => console.error(err))
+      .on('error', err => {
+        console.error(err);
+        reject();
+      })
+      .on('end', args => {
+        resolve();
+      })
       .run();
   });
 }
