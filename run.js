@@ -6,7 +6,8 @@ const subtitle = require('subtitle');
 
 const directory = 'bin';
 
-const videoBatchSize = 2;
+const screenshotBatchSize = 10;
+const videoBatchSize = 10;
 
 // verify that all params are provided
 if(!argv.v) {
@@ -66,20 +67,24 @@ function simplifySubtitles(values) {
       index: value.index,
     }));
 
-    tuples = tuples.slice(0, 10);
-
     resolve(tuples);
   });
 }
 
-// given an array of timestamps and a path, print screenshots
 function captureScreenshots(tuples) {
   return new Promise((resolve, reject) => {
-    var timestamps = tuples.map(value => value.start);
+    mapLimit(tuples, screenshotBatchSize, captureSingleScreenshot).then(results => {
+      resolve(tuples);
+    });
+  });
+}
+
+function captureSingleScreenshot(tuple) {
+  return new Promise((resolve, reject) => {
     ffmpeg(argv.v)
       .screenshots({
-        timestamps: timestamps,
-        filename: '%i.jpg',
+        timestamps: [tuple.start],
+        filename: `${tuple.index}.jpg`,
         folder: directory
       })
       .on('error', err => {
@@ -87,10 +92,9 @@ function captureScreenshots(tuples) {
         reject();
       })
       .on('end', args => {
-        resolve(tuples);
+        resolve(tuple);
       });
   });
-
 }
 
 function captureVideos(tuples) {
